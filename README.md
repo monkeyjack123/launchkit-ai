@@ -18,10 +18,11 @@ This increment adds a usable brief submission flow:
 - Success state that renders created project JSON as demo output
 
 ## MVP increment (Issue 3)
-This increment adds project listing for demo workflows:
-- `GET /api/projects` with pagination (`limit`) and optional tone filter (`tone`)
-- Stable response contract with `items` + `total`
-- API tests for list/filter behavior and deterministic test isolation
+This increment adds generation orchestration for demo workflows:
+- `POST /api/generate-launch-kit` returns 4-channel structured output
+- Channel bundles: landing page, Product Hunt copy, X thread, and 3-email sequence
+- Actionable 400 error for unsupported tone values
+- API tests for success and failure paths
 
 ## Quickstart
 
@@ -51,6 +52,26 @@ Response:
   "total": 0
 }
 ```
+
+### `POST /api/generate-launch-kit`
+Generate structured launch assets from a brief.
+
+Example payload:
+```json
+{
+  "product_name": "LaunchKit",
+  "one_liner": "Generate launch assets from one clear brief.",
+  "target_audience": "Indie hackers",
+  "launch_goal": "Get first 50 signups",
+  "tone": "clear"
+}
+```
+
+Response keys:
+- `landing_page`
+- `product_hunt`
+- `x_thread`
+- `email_sequence`
 
 ### `POST /api/projects`
 Create a launch project.

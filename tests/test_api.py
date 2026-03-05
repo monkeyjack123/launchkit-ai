@@ -108,3 +108,38 @@ def test_list_projects_supports_limit_and_tone_filter():
     assert data["total"] == 2
     assert len(data["items"]) == 1
     assert data["items"][0]["tone"] == "clear"
+
+
+def test_generate_launch_kit_returns_four_channel_output():
+    payload = {
+        "product_name": "LaunchKit",
+        "one_liner": "Generate launch assets from one clear brief.",
+        "target_audience": "Indie hackers",
+        "launch_goal": "Get first 50 signups",
+        "tone": "clear",
+    }
+
+    response = client.post("/api/generate-launch-kit", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body.keys()) == {"landing_page", "product_hunt", "x_thread", "email_sequence"}
+    assert len(body["email_sequence"]) == 3
+    assert "headline" in body["landing_page"]
+    assert "tagline" in body["product_hunt"]
+    assert "tweets" in body["x_thread"]
+
+
+def test_generate_launch_kit_rejects_unsupported_tone_with_actionable_error():
+    payload = {
+        "product_name": "LaunchKit",
+        "one_liner": "Generate launch assets from one clear brief.",
+        "target_audience": "Indie hackers",
+        "launch_goal": "Get first 50 signups",
+        "tone": "serious-enterprise",
+    }
+
+    response = client.post("/api/generate-launch-kit", json=payload)
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert "Unsupported tone" in detail
+    assert "clear" in detail

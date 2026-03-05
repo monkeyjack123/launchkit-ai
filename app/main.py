@@ -5,9 +5,11 @@ from pathlib import Path
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query
+
+from .generator import generate_launch_kit
 from fastapi.responses import FileResponse
 
-from .models import LaunchProject, LaunchProjectCreate, LaunchProjectList
+from .models import LaunchKitOutput, LaunchProject, LaunchProjectCreate, LaunchProjectList
 
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
 
@@ -35,6 +37,14 @@ def list_projects(
     if tone:
         projects = [project for project in projects if project.tone == tone]
     return LaunchProjectList(items=projects[:limit], total=len(projects))
+
+
+@app.post("/api/generate-launch-kit", response_model=LaunchKitOutput)
+def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
+    try:
+        return generate_launch_kit(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/api/projects/{project_id}", response_model=LaunchProject)

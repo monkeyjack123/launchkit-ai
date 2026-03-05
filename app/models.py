@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
+from typing import Any
 
 
 class LaunchProjectCreate(BaseModel):
@@ -23,3 +24,10 @@ class LaunchProject(LaunchProjectCreate):
 class LaunchProjectList(BaseModel):
     items: list[LaunchProject]
     total: int
+
+
+class LaunchKitOutput(BaseModel):
+    landing_page: dict[str, Any]
+    product_hunt: dict[str, Any]
+    x_thread: dict[str, Any]
+    email_sequence: list[dict[str, str]]
