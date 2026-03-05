@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaunchKit AI</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; background: #f7f7fb; }
+      .wrap { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+      .pane { padding: 24px; }
+      .pane h2 { margin-top: 0; }
+      .input { background: #fff; border-right: 1px solid #e5e7eb; }
+      .output { background: #fcfcff; }
+      .stub { border: 1px dashed #9ca3af; border-radius: 8px; padding: 16px; background: #fff; }
+      label { display: block; font-size: 14px; margin: 12px 0 4px; }
+      input, textarea { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+      button { margin-top: 14px; padding: 10px 14px; border: 0; border-radius: 6px; background: #111827; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="pane input">
+        <h2>Launch Brief</h2>
+        <div class="stub">
+          <label>Product name</label><input placeholder="Acme AI" />
+          <label>One-liner</label><textarea rows="3" placeholder="Describe your product."></textarea>
+          <button>Generate launch kit</button>
+        </div>
+      </section>
+      <section class="pane output">
+        <h2>Generated Assets</h2>
+        <div class="stub">Landing page copy, Product Hunt post, X thread, and launch emails will render here.</div>
+      </section>
+    </div>
+  </body>
+</html>
