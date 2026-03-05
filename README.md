@@ -17,6 +17,12 @@ This increment adds a usable brief submission flow:
 - API contract validation tests for malformed payloads and missing required fields
 - Success state that renders created project JSON as demo output
 
+## MVP increment (Issue 3)
+This increment adds project listing for demo workflows:
+- `GET /api/projects` with pagination (`limit`) and optional tone filter (`tone`)
+- Stable response contract with `items` + `total`
+- API tests for list/filter behavior and deterministic test isolation
+
 ## Quickstart
 
 ```bash
@@ -30,6 +36,21 @@ uvicorn app.main:app --reload
 Open: `http://127.0.0.1:8000/`
 
 ## API
+
+### `GET /api/projects?limit=20&tone=clear`
+List launch projects ordered by latest update.
+
+Query params:
+- `limit` (1-100, default 20)
+- `tone` (optional exact tone match)
+
+Response:
+```json
+{
+  "items": [],
+  "total": 0
+}
+```
 
 ### `POST /api/projects`
 Create a launch project.

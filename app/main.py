@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from .models import LaunchProject, LaunchProjectCreate
+from .models import LaunchProject, LaunchProjectCreate, LaunchProjectList
 
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
 
@@ -24,6 +24,17 @@ def create_project(payload: LaunchProjectCreate) -> LaunchProject:
     project = LaunchProject(**payload.model_dump())
     _DB[project.id] = project
     return project
+
+
+@app.get("/api/projects", response_model=LaunchProjectList)
+def list_projects(
+    limit: int = Query(default=20, ge=1, le=100),
+    tone: str | None = Query(default=None, min_length=3, max_length=40),
+) -> LaunchProjectList:
+    projects = sorted(_DB.values(), key=lambda project: project.updated_at, reverse=True)
+    if tone:
+        projects = [project for project in projects if project.tone == tone]
+    return LaunchProjectList(items=projects[:limit], total=len(projects))
 
 
 @app.get("/api/projects/{project_id}", response_model=LaunchProject)

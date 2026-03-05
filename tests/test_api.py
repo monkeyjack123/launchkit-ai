@@ -1,9 +1,17 @@
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import _DB, app
 
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def clear_db():
+    _DB.clear()
+    yield
+    _DB.clear()
 
 
 def test_health():
@@ -63,3 +71,40 @@ def test_create_project_contract_missing_required_field():
 def test_get_missing_project_404():
     response = client.get("/api/projects/9e6b391e-bb8c-4e61-8fd8-0fa31ea8e7a0")
     assert response.status_code == 404
+
+
+def test_list_projects_supports_limit_and_tone_filter():
+    payloads = [
+        {
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+        {
+            "product_name": "SignalBoard",
+            "one_liner": "Track GTM signals from all channels in one feed.",
+            "target_audience": "Growth teams",
+            "launch_goal": "Acquire 20 design partners",
+            "tone": "confident",
+        },
+        {
+            "product_name": "LaunchLoop",
+            "one_liner": "Convert raw notes into launch-ready copy in minutes.",
+            "target_audience": "Solo founders",
+            "launch_goal": "Book 15 demos",
+            "tone": "clear",
+        },
+    ]
+
+    for payload in payloads:
+        created = client.post("/api/projects", json=payload)
+        assert created.status_code == 201
+
+    filtered = client.get("/api/projects?limit=1&tone=clear")
+    assert filtered.status_code == 200
+    data = filtered.json()
+    assert data["total"] == 2
+    assert len(data["items"]) == 1
+    assert data["items"][0]["tone"] == "clear"
