@@ -5,32 +5,170 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LaunchKit AI</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f7f7fb; }
+      body { font-family: Arial, sans-serif; margin: 0; background: #f7f7fb; color: #111827; }
       .wrap { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
       .pane { padding: 24px; }
       .pane h2 { margin-top: 0; }
       .input { background: #fff; border-right: 1px solid #e5e7eb; }
       .output { background: #fcfcff; }
-      .stub { border: 1px dashed #9ca3af; border-radius: 8px; padding: 16px; background: #fff; }
+      .stub { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: #fff; }
       label { display: block; font-size: 14px; margin: 12px 0 4px; }
-      input, textarea { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
-      button { margin-top: 14px; padding: 10px 14px; border: 0; border-radius: 6px; background: #111827; color: #fff; }
+      input, textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      input.error, textarea.error { border-color: #dc2626; background: #fff7f7; }
+      .error-msg { color: #b91c1c; font-size: 12px; margin-top: 4px; min-height: 14px; }
+      button {
+        margin-top: 14px;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 6px;
+        background: #111827;
+        color: #fff;
+        cursor: pointer;
+      }
+      button[disabled] { opacity: 0.7; cursor: not-allowed; }
+      .status { margin: 10px 0; font-size: 14px; color: #374151; min-height: 20px; }
+      pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <section class="pane input">
         <h2>Launch Brief</h2>
-        <div class="stub">
-          <label>Product name</label><input placeholder="Acme AI" />
-          <label>One-liner</label><textarea rows="3" placeholder="Describe your product."></textarea>
-          <button>Generate launch kit</button>
-        </div>
+        <form id="brief-form" class="stub">
+          <label for="product_name">Product name</label>
+          <input id="product_name" name="product_name" placeholder="Acme AI" required />
+          <div class="error-msg" data-error-for="product_name"></div>
+
+          <label for="one_liner">One-liner</label>
+          <textarea id="one_liner" name="one_liner" rows="3" placeholder="Describe your product." required></textarea>
+          <div class="error-msg" data-error-for="one_liner"></div>
+
+          <label for="target_audience">Target audience</label>
+          <input id="target_audience" name="target_audience" placeholder="B2B product teams" required />
+          <div class="error-msg" data-error-for="target_audience"></div>
+
+          <label for="launch_goal">Launch goal</label>
+          <input id="launch_goal" name="launch_goal" placeholder="Get first 50 signups" required />
+          <div class="error-msg" data-error-for="launch_goal"></div>
+
+          <label for="tone">Tone</label>
+          <input id="tone" name="tone" value="confident" required />
+          <div class="error-msg" data-error-for="tone"></div>
+
+          <button id="submit-btn" type="submit">Generate launch kit</button>
+          <div id="status" class="status"></div>
+        </form>
       </section>
       <section class="pane output">
         <h2>Generated Assets</h2>
-        <div class="stub">Landing page copy, Product Hunt post, X thread, and launch emails will render here.</div>
+        <div class="stub">
+          <pre id="result">Submit a valid brief to create your launch project.</pre>
+        </div>
       </section>
     </div>
+
+    <script>
+      const form = document.getElementById('brief-form');
+      const statusEl = document.getElementById('status');
+      const resultEl = document.getElementById('result');
+      const submitBtn = document.getElementById('submit-btn');
+      const fields = ['product_name', 'one_liner', 'target_audience', 'launch_goal', 'tone'];
+
+      const minLengths = {
+        product_name: 2,
+        one_liner: 10,
+        target_audience: 5,
+        launch_goal: 5,
+        tone: 3,
+      };
+
+      function clearErrors() {
+        fields.forEach((name) => {
+          const input = form.elements[name];
+          const errorEl = document.querySelector(`[data-error-for="${name}"]`);
+          input.classList.remove('error');
+          errorEl.textContent = '';
+        });
+      }
+
+      function setFieldError(name, message) {
+        const input = form.elements[name];
+        const errorEl = document.querySelector(`[data-error-for="${name}"]`);
+        if (!input || !errorEl) return;
+        input.classList.add('error');
+        errorEl.textContent = message;
+      }
+
+      function validateLocal(payload) {
+        let valid = true;
+        fields.forEach((name) => {
+          const value = (payload[name] || '').trim();
+          if (!value) {
+            setFieldError(name, 'This field is required.');
+            valid = false;
+            return;
+          }
+          if (value.length < minLengths[name]) {
+            setFieldError(name, `Must be at least ${minLengths[name]} characters.`);
+            valid = false;
+          }
+        });
+        return valid;
+      }
+
+      function applyApiErrors(details) {
+        if (!Array.isArray(details)) return;
+        details.forEach((err) => {
+          const loc = err.loc || [];
+          const field = loc[loc.length - 1];
+          if (typeof field === 'string') {
+            setFieldError(field, err.msg || 'Invalid value.');
+          }
+        });
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearErrors();
+        statusEl.textContent = '';
+
+        const payload = Object.fromEntries(new FormData(form).entries());
+        if (!validateLocal(payload)) {
+          statusEl.textContent = 'Please fix validation errors before submitting.';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        statusEl.textContent = 'Creating launch project...';
+
+        try {
+          const response = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const body = await response.json();
+          if (!response.ok) {
+            applyApiErrors(body.detail);
+            statusEl.textContent = 'Validation failed. Review field errors.';
+            return;
+          }
+
+          statusEl.textContent = 'Project created successfully.';
+          resultEl.textContent = JSON.stringify(body, null, 2);
+        } catch (error) {
+          statusEl.textContent = 'Network error. Verify the API server is running.';
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>

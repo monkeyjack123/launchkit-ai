@@ -30,6 +30,36 @@ def test_create_and_get_project():
     assert fetched.json()["product_name"] == payload["product_name"]
 
 
+def test_create_project_contract_validation_errors():
+    response = client.post(
+        "/api/projects",
+        json={
+            "product_name": "A",
+            "one_liner": "Too short",
+            "target_audience": "Dev",
+            "launch_goal": "Go",
+            "tone": "ok",
+        },
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    invalid_fields = {item["loc"][-1] for item in detail}
+    assert {"product_name", "target_audience", "launch_goal", "tone"}.issubset(invalid_fields)
+
+
+def test_create_project_contract_missing_required_field():
+    payload = {
+        "product_name": "LaunchKit",
+        "target_audience": "Indie hackers",
+        "launch_goal": "Get first 50 signups",
+        "tone": "clear",
+    }
+    response = client.post("/api/projects", json=payload)
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert any(item["loc"][-1] == "one_liner" for item in detail)
+
+
 def test_get_missing_project_404():
     response = client.get("/api/projects/9e6b391e-bb8c-4e61-8fd8-0fa31ea8e7a0")
     assert response.status_code == 404

@@ -10,6 +10,13 @@ This increment scaffolds a usable MVP shell with:
 - API endpoints for project create/get
 - Test suite for API and model validation
 
+## MVP increment (Issue 2)
+This increment adds a usable brief submission flow:
+- Interactive launch brief form wired to `POST /api/projects`
+- Client-side field validation with inline error messages
+- API contract validation tests for malformed payloads and missing required fields
+- Success state that renders created project JSON as demo output
+
 ## Quickstart
 
 ```bash
