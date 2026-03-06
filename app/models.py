@@ -42,6 +42,12 @@ class SupportedTonesResponse(BaseModel):
     default_tone: str
 
 
+class OutputSchemaResponse(BaseModel):
+    channels: list[str]
+    required_fields: dict[str, list[str]]
+    constraints: dict[str, str]
+
+
 class LaunchKitOutput(BaseModel):
     landing_page: dict[str, Any]
     product_hunt: dict[str, Any]

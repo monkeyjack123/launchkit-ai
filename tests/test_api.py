@@ -225,3 +225,20 @@ def test_supported_tones_endpoint_returns_sorted_tones_and_default():
     body = response.json()
     assert body["tones"] == ["clear", "confident", "playful", "technical"]
     assert body["default_tone"] == "confident"
+
+
+def test_output_schema_endpoint_returns_channel_contract_and_constraints():
+    response = client.get("/api/meta/output-schema")
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["channels"] == ["landing_page", "product_hunt", "x_thread", "email_sequence"]
+    assert body["required_fields"]["landing_page"] == [
+        "headline",
+        "subheadline",
+        "primary_cta",
+        "proof_points",
+        "key_bullets",
+    ]
+    assert body["constraints"]["product_hunt.tagline"] == "Max 60 characters"
+    assert body["constraints"]["email_sequence"] == "Exactly 3 emails"

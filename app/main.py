@@ -15,6 +15,7 @@ from .models import (
     LaunchProjectCreate,
     LaunchProjectList,
     LaunchProjectStats,
+    OutputSchemaResponse,
     SupportedTonesResponse,
 )
 
@@ -58,6 +59,25 @@ def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
 @app.get("/api/meta/tones", response_model=SupportedTonesResponse)
 def supported_tones() -> SupportedTonesResponse:
     return SupportedTonesResponse(tones=sorted(SUPPORTED_TONES), default_tone="confident")
+
+
+@app.get("/api/meta/output-schema", response_model=OutputSchemaResponse)
+def output_schema() -> OutputSchemaResponse:
+    return OutputSchemaResponse(
+        channels=["landing_page", "product_hunt", "x_thread", "email_sequence"],
+        required_fields={
+            "landing_page": ["headline", "subheadline", "primary_cta", "proof_points", "key_bullets"],
+            "product_hunt": ["tagline", "first_comment", "launch_checklist", "cta"],
+            "x_thread": ["hook", "tweets", "cta"],
+            "email_sequence": ["subject", "body"],
+        },
+        constraints={
+            "product_hunt.tagline": "Max 60 characters",
+            "landing_page.proof_points": "Exactly 3 proof points",
+            "x_thread.tweets": "Exactly 4 tweets",
+            "email_sequence": "Exactly 3 emails",
+        },
+    )
 
 
 @app.get("/api/projects/stats", response_model=LaunchProjectStats)

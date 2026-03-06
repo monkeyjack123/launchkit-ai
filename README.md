@@ -44,6 +44,12 @@ This increment hardens launch content template quality for landing + Product Hun
 - Enforced tagline trimming to 60 chars for marketplace-style brevity
 - Added API tests validating template shape and guardrail content
 
+## MVP increment (Issue 7)
+This increment exposes output-contract metadata for client builders:
+- Added `GET /api/meta/output-schema` for channel-level required fields
+- Added explicit generation constraints (tagline length, tweet/email counts, proof-point count)
+- Added API tests to lock schema ordering and constraint values
+
 ## Quickstart
 
 ```bash
@@ -116,6 +122,28 @@ Response:
     "confident": 1
   },
   "latest_project_id": "f7e0f915-4d5f-4f6d-a99d-737f95ad6a1a"
+}
+```
+
+### `GET /api/meta/output-schema`
+Return generation output contract metadata for frontend validators/editors.
+
+Response:
+```json
+{
+  "channels": ["landing_page", "product_hunt", "x_thread", "email_sequence"],
+  "required_fields": {
+    "landing_page": ["headline", "subheadline", "primary_cta", "proof_points", "key_bullets"],
+    "product_hunt": ["tagline", "first_comment", "launch_checklist", "cta"],
+    "x_thread": ["hook", "tweets", "cta"],
+    "email_sequence": ["subject", "body"]
+  },
+  "constraints": {
+    "product_hunt.tagline": "Max 60 characters",
+    "landing_page.proof_points": "Exactly 3 proof points",
+    "x_thread.tweets": "Exactly 4 tweets",
+    "email_sequence": "Exactly 3 emails"
+  }
 }
 ```
 
