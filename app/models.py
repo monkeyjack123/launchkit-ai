@@ -37,6 +37,11 @@ class LaunchProjectStats(BaseModel):
     latest_project_id: UUID | None = None
 
 
+class SupportedTonesResponse(BaseModel):
+    tones: list[str]
+    default_tone: str
+
+
 class LaunchKitOutput(BaseModel):
     landing_page: dict[str, Any]
     product_hunt: dict[str, Any]

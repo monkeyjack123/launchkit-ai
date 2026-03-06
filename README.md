@@ -93,6 +93,17 @@ Response keys:
 - `x_thread`
 - `email_sequence`
 
+### `GET /api/meta/tones`
+Return supported launch tones and default tone for client-side form controls.
+
+Response:
+```json
+{
+  "tones": ["clear", "confident", "playful", "technical"],
+  "default_tone": "confident"
+}
+```
+
 ### `GET /api/projects/stats`
 Return aggregate project stats for quick dashboard summaries.
 

@@ -217,3 +217,11 @@ def test_generate_launch_kit_rejects_unsupported_tone_with_actionable_error():
     detail = response.json()["detail"]
     assert "Unsupported tone" in detail
     assert "clear" in detail
+
+
+def test_supported_tones_endpoint_returns_sorted_tones_and_default():
+    response = client.get("/api/meta/tones")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tones"] == ["clear", "confident", "playful", "technical"]
+    assert body["default_tone"] == "confident"

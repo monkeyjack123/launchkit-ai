@@ -6,10 +6,17 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query
 
-from .generator import generate_launch_kit
+from .generator import SUPPORTED_TONES, generate_launch_kit
 from fastapi.responses import FileResponse
 
-from .models import LaunchKitOutput, LaunchProject, LaunchProjectCreate, LaunchProjectList, LaunchProjectStats
+from .models import (
+    LaunchKitOutput,
+    LaunchProject,
+    LaunchProjectCreate,
+    LaunchProjectList,
+    LaunchProjectStats,
+    SupportedTonesResponse,
+)
 
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
 
@@ -46,6 +53,11 @@ def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
         return generate_launch_kit(payload)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/meta/tones", response_model=SupportedTonesResponse)
+def supported_tones() -> SupportedTonesResponse:
+    return SupportedTonesResponse(tones=sorted(SUPPORTED_TONES), default_tone="confident")
 
 
 @app.get("/api/projects/stats", response_model=LaunchProjectStats)
