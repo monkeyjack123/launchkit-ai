@@ -5,17 +5,16 @@ from .models import LaunchKitOutput, LaunchProjectCreate
 SUPPORTED_TONES = {"clear", "confident", "playful", "technical"}
 
 
-def generate_launch_kit(brief: LaunchProjectCreate) -> LaunchKitOutput:
-    tone = brief.tone.lower().strip()
-    if tone not in SUPPORTED_TONES:
-        raise ValueError(
-            f"Unsupported tone '{brief.tone}'. Use one of: {', '.join(sorted(SUPPORTED_TONES))}."
-        )
-
-    landing = {
+def _build_landing_page(brief: LaunchProjectCreate, tone: str) -> dict[str, object]:
+    return {
         "headline": f"{brief.product_name}: {brief.one_liner}",
         "subheadline": f"Built for {brief.target_audience.lower()} to {brief.launch_goal.lower()}.",
         "primary_cta": "Get early access",
+        "proof_points": [
+            "No fake metrics or unverified claims.",
+            "Concrete problem-to-outcome framing.",
+            "One clear CTA for launch conversion.",
+        ],
         "key_bullets": [
             f"Tone: {tone}",
             f"Audience fit: {brief.target_audience}",
@@ -23,14 +22,31 @@ def generate_launch_kit(brief: LaunchProjectCreate) -> LaunchKitOutput:
         ],
     }
 
-    product_hunt = {
-        "tagline": brief.one_liner,
-        "first_comment": (
-            f"Hey Product Hunt 👋 We built {brief.product_name} for {brief.target_audience.lower()}. "
-            f"Our goal: {brief.launch_goal.lower()}."
-        ),
+
+def _build_product_hunt(brief: LaunchProjectCreate) -> dict[str, str]:
+    tagline = brief.one_liner[:60].rstrip()
+    first_comment = (
+        f"Hey Product Hunt 👋 We built {brief.product_name} for {brief.target_audience.lower()} to "
+        f"{brief.launch_goal.lower()}. We're sharing the real scope and would love candid feedback."
+    )
+    return {
+        "tagline": tagline,
+        "first_comment": first_comment,
+        "launch_checklist": "Demo, pricing, and setup details are verified before posting.",
         "cta": "Try it and share feedback",
     }
+
+
+def generate_launch_kit(brief: LaunchProjectCreate) -> LaunchKitOutput:
+    tone = brief.tone.lower().strip()
+    if tone not in SUPPORTED_TONES:
+        raise ValueError(
+            f"Unsupported tone '{brief.tone}'. Use one of: {', '.join(sorted(SUPPORTED_TONES))}."
+        )
+
+    landing = _build_landing_page(brief, tone)
+
+    product_hunt = _build_product_hunt(brief)
 
     x_thread = {
         "hook": f"We built {brief.product_name} to solve one painful launch problem.",

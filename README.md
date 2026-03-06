@@ -37,6 +37,13 @@ This increment adds lightweight portfolio visibility for launch ops:
 - Latest project pointer for basic recency tracking in dashboards
 - API coverage for empty + populated stats scenarios
 
+## MVP increment (Issue 6)
+This increment hardens launch content template quality for landing + Product Hunt output:
+- Added explicit landing-page proof points (anti-hallucination + clarity guardrails)
+- Added Product Hunt launch checklist field for pre-post verification cues
+- Enforced tagline trimming to 60 chars for marketplace-style brevity
+- Added API tests validating template shape and guardrail content
+
 ## Quickstart
 
 ```bash

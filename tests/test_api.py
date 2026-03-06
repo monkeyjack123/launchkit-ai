@@ -193,7 +193,13 @@ def test_generate_launch_kit_returns_four_channel_output():
     assert set(body.keys()) == {"landing_page", "product_hunt", "x_thread", "email_sequence"}
     assert len(body["email_sequence"]) == 3
     assert "headline" in body["landing_page"]
+    assert "proof_points" in body["landing_page"]
+    assert len(body["landing_page"]["proof_points"]) == 3
+    assert "No fake metrics" in body["landing_page"]["proof_points"][0]
     assert "tagline" in body["product_hunt"]
+    assert len(body["product_hunt"]["tagline"]) <= 60
+    assert "launch_checklist" in body["product_hunt"]
+    assert "verified" in body["product_hunt"]["launch_checklist"].lower()
     assert "tweets" in body["x_thread"]
 
 
