@@ -24,6 +24,12 @@ This increment adds generation orchestration for demo workflows:
 - Actionable 400 error for unsupported tone values
 - API tests for success and failure paths
 
+## MVP increment (Issue 4)
+This increment improves tone handling consistency across create/list/generate flows:
+- Normalizes `tone` inputs (trim + lowercase) at API contract level
+- Makes tone filtering case-insensitive and whitespace-tolerant in `GET /api/projects`
+- Adds regression tests for normalized create + filter behavior
+
 ## Quickstart
 
 ```bash

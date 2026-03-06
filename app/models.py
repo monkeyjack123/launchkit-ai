@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Any
 
 
@@ -13,6 +13,11 @@ class LaunchProjectCreate(BaseModel):
     target_audience: str = Field(min_length=5, max_length=200)
     launch_goal: str = Field(min_length=5, max_length=200)
     tone: str = Field(default="confident", min_length=3, max_length=40)
+
+    @field_validator("tone")
+    @classmethod
+    def normalize_tone(cls, value: str) -> str:
+        return value.strip().lower()
 
 
 class LaunchProject(LaunchProjectCreate):

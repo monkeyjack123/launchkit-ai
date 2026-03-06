@@ -35,7 +35,8 @@ def list_projects(
 ) -> LaunchProjectList:
     projects = sorted(_DB.values(), key=lambda project: project.updated_at, reverse=True)
     if tone:
-        projects = [project for project in projects if project.tone == tone]
+        normalized_tone = tone.strip().lower()
+        projects = [project for project in projects if project.tone == normalized_tone]
     return LaunchProjectList(items=projects[:limit], total=len(projects))
 
 

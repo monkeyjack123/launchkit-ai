@@ -110,6 +110,26 @@ def test_list_projects_supports_limit_and_tone_filter():
     assert data["items"][0]["tone"] == "clear"
 
 
+def test_tone_is_normalized_on_create_and_filter_queries():
+    payload = {
+        "product_name": "LaunchKit",
+        "one_liner": "Generate launch assets from one clear brief.",
+        "target_audience": "Indie hackers",
+        "launch_goal": "Get first 50 signups",
+        "tone": "  ClEaR  ",
+    }
+
+    created = client.post("/api/projects", json=payload)
+    assert created.status_code == 201
+    assert created.json()["tone"] == "clear"
+
+    filtered = client.get("/api/projects?tone=%20CLEAR%20")
+    assert filtered.status_code == 200
+    data = filtered.json()
+    assert data["total"] == 1
+    assert data["items"][0]["tone"] == "clear"
+
+
 def test_generate_launch_kit_returns_four_channel_output():
     payload = {
         "product_name": "LaunchKit",
