@@ -31,6 +31,12 @@ class LaunchProjectList(BaseModel):
     total: int
 
 
+class LaunchProjectStats(BaseModel):
+    total_projects: int
+    tone_breakdown: dict[str, int]
+    latest_project_id: UUID | None = None
+
+
 class LaunchKitOutput(BaseModel):
     landing_page: dict[str, Any]
     product_hunt: dict[str, Any]

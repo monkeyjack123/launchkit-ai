@@ -130,6 +130,54 @@ def test_tone_is_normalized_on_create_and_filter_queries():
     assert data["items"][0]["tone"] == "clear"
 
 
+def test_project_stats_returns_totals_tone_breakdown_and_latest_project():
+    payloads = [
+        {
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+        {
+            "product_name": "SignalBoard",
+            "one_liner": "Track GTM signals from all channels in one feed.",
+            "target_audience": "Growth teams",
+            "launch_goal": "Acquire 20 design partners",
+            "tone": "confident",
+        },
+        {
+            "product_name": "LaunchLoop",
+            "one_liner": "Convert raw notes into launch-ready copy in minutes.",
+            "target_audience": "Solo founders",
+            "launch_goal": "Book 15 demos",
+            "tone": "clear",
+        },
+    ]
+
+    latest_id = None
+    for payload in payloads:
+        created = client.post("/api/projects", json=payload)
+        assert created.status_code == 201
+        latest_id = created.json()["id"]
+
+    response = client.get("/api/projects/stats")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_projects"] == 3
+    assert body["tone_breakdown"] == {"clear": 2, "confident": 1}
+    assert body["latest_project_id"] == latest_id
+
+
+def test_project_stats_empty_state():
+    response = client.get("/api/projects/stats")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_projects"] == 0
+    assert body["tone_breakdown"] == {}
+    assert body["latest_project_id"] is None
+
+
 def test_generate_launch_kit_returns_four_channel_output():
     payload = {
         "product_name": "LaunchKit",

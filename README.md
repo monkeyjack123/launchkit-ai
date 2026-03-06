@@ -30,6 +30,13 @@ This increment improves tone handling consistency across create/list/generate fl
 - Makes tone filtering case-insensitive and whitespace-tolerant in `GET /api/projects`
 - Adds regression tests for normalized create + filter behavior
 
+## MVP increment (Issue 5)
+This increment adds lightweight portfolio visibility for launch ops:
+- New `GET /api/projects/stats` endpoint with aggregate project counts
+- Tone distribution breakdown for quick campaign mix checks
+- Latest project pointer for basic recency tracking in dashboards
+- API coverage for empty + populated stats scenarios
+
 ## Quickstart
 
 ```bash
@@ -78,6 +85,21 @@ Response keys:
 - `product_hunt`
 - `x_thread`
 - `email_sequence`
+
+### `GET /api/projects/stats`
+Return aggregate project stats for quick dashboard summaries.
+
+Response:
+```json
+{
+  "total_projects": 3,
+  "tone_breakdown": {
+    "clear": 2,
+    "confident": 1
+  },
+  "latest_project_id": "f7e0f915-4d5f-4f6d-a99d-737f95ad6a1a"
+}
+```
 
 ### `POST /api/projects`
 Create a launch project.

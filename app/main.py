@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query
 from .generator import generate_launch_kit
 from fastapi.responses import FileResponse
 
-from .models import LaunchKitOutput, LaunchProject, LaunchProjectCreate, LaunchProjectList
+from .models import LaunchKitOutput, LaunchProject, LaunchProjectCreate, LaunchProjectList, LaunchProjectStats
 
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
 
@@ -46,6 +46,21 @@ def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
         return generate_launch_kit(payload)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/projects/stats", response_model=LaunchProjectStats)
+def project_stats() -> LaunchProjectStats:
+    projects = sorted(_DB.values(), key=lambda project: project.updated_at, reverse=True)
+    tone_breakdown: dict[str, int] = {}
+    for project in projects:
+        tone_breakdown[project.tone] = tone_breakdown.get(project.tone, 0) + 1
+
+    latest_project_id = projects[0].id if projects else None
+    return LaunchProjectStats(
+        total_projects=len(projects),
+        tone_breakdown=tone_breakdown,
+        latest_project_id=latest_project_id,
+    )
 
 
 @app.get("/api/projects/{project_id}", response_model=LaunchProject)
