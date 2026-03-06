@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query
 
-from .generator import SUPPORTED_TONES, generate_launch_kit
+from .generator import SUPPORTED_TONES, TONE_GUIDELINES, generate_launch_kit
 from fastapi.responses import FileResponse
 
 from .models import (
@@ -17,6 +17,7 @@ from .models import (
     LaunchProjectStats,
     OutputSchemaResponse,
     SupportedTonesResponse,
+    ToneGuidelinesResponse,
 )
 
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
@@ -59,6 +60,11 @@ def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
 @app.get("/api/meta/tones", response_model=SupportedTonesResponse)
 def supported_tones() -> SupportedTonesResponse:
     return SupportedTonesResponse(tones=sorted(SUPPORTED_TONES), default_tone="confident")
+
+
+@app.get("/api/meta/tone-guidelines", response_model=ToneGuidelinesResponse)
+def tone_guidelines() -> ToneGuidelinesResponse:
+    return ToneGuidelinesResponse(default_tone="confident", guidelines=TONE_GUIDELINES)
 
 
 @app.get("/api/meta/output-schema", response_model=OutputSchemaResponse)

@@ -4,6 +4,25 @@ from .models import LaunchKitOutput, LaunchProjectCreate
 
 SUPPORTED_TONES = {"clear", "confident", "playful", "technical"}
 
+TONE_GUIDELINES: dict[str, dict[str, str]] = {
+    "clear": {
+        "voice": "Straightforward and concrete.",
+        "focus": "Clarity, outcomes, and low-jargon messaging.",
+    },
+    "confident": {
+        "voice": "Bold and decisive without hype.",
+        "focus": "Momentum, differentiation, and clear CTA intent.",
+    },
+    "playful": {
+        "voice": "Light, witty, and approachable.",
+        "focus": "Memorable phrasing while preserving concrete value.",
+    },
+    "technical": {
+        "voice": "Precise and implementation-oriented.",
+        "focus": "Specific capabilities, reliability, and integration detail.",
+    },
+}
+
 
 def _build_landing_page(brief: LaunchProjectCreate, tone: str) -> dict[str, object]:
     return {

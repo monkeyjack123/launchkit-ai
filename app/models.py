@@ -42,6 +42,11 @@ class SupportedTonesResponse(BaseModel):
     default_tone: str
 
 
+class ToneGuidelinesResponse(BaseModel):
+    default_tone: str
+    guidelines: dict[str, dict[str, str]]
+
+
 class OutputSchemaResponse(BaseModel):
     channels: list[str]
     required_fields: dict[str, list[str]]

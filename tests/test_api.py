@@ -227,6 +227,17 @@ def test_supported_tones_endpoint_returns_sorted_tones_and_default():
     assert body["default_tone"] == "confident"
 
 
+def test_tone_guidelines_endpoint_returns_default_and_per_tone_guidance():
+    response = client.get("/api/meta/tone-guidelines")
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["default_tone"] == "confident"
+    assert set(body["guidelines"].keys()) == {"clear", "confident", "playful", "technical"}
+    assert "voice" in body["guidelines"]["clear"]
+    assert "focus" in body["guidelines"]["clear"]
+
+
 def test_output_schema_endpoint_returns_channel_contract_and_constraints():
     response = client.get("/api/meta/output-schema")
     assert response.status_code == 200

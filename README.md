@@ -125,6 +125,26 @@ Response:
 }
 ```
 
+### `GET /api/meta/tone-guidelines`
+Return per-tone writing guidance for client-side prompt helpers and UX hints.
+
+Response:
+```json
+{
+  "default_tone": "confident",
+  "guidelines": {
+    "clear": {
+      "voice": "Straightforward and concrete.",
+      "focus": "Clarity, outcomes, and low-jargon messaging."
+    },
+    "confident": {
+      "voice": "Bold and decisive without hype.",
+      "focus": "Momentum, differentiation, and clear CTA intent."
+    }
+  }
+}
+```
+
 ### `GET /api/meta/output-schema`
 Return generation output contract metadata for frontend validators/editors.
 
