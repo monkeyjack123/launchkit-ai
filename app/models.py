@@ -26,6 +26,21 @@ class LaunchProject(LaunchProjectCreate):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class LaunchProjectUpdate(BaseModel):
+    product_name: str | None = Field(default=None, min_length=2, max_length=120)
+    one_liner: str | None = Field(default=None, min_length=10, max_length=240)
+    target_audience: str | None = Field(default=None, min_length=5, max_length=200)
+    launch_goal: str | None = Field(default=None, min_length=5, max_length=200)
+    tone: str | None = Field(default=None, min_length=3, max_length=40)
+
+    @field_validator("tone")
+    @classmethod
+    def normalize_optional_tone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        return value.strip().lower()
+
+
 class LaunchProjectList(BaseModel):
     items: list[LaunchProject]
     total: int

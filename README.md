@@ -50,6 +50,13 @@ This increment exposes output-contract metadata for client builders:
 - Added explicit generation constraints (tagline length, tweet/email counts, proof-point count)
 - Added API tests to lock schema ordering and constraint values
 
+## MVP increment (Issue 8)
+This increment adds partial-update support for saved launch projects:
+- Added `PATCH /api/projects/{project_id}` to update selected brief fields
+- Preserves existing fields when omitted to support iterative brief refinement
+- Normalizes `tone` during updates (trim + lowercase) for consistent filtering/analytics
+- Added model + API tests for update success and 404 handling
+
 ## Quickstart
 
 ```bash
@@ -183,6 +190,17 @@ Example payload:
 
 ### `GET /api/projects/{project_id}`
 Load a previously created project.
+
+### `PATCH /api/projects/{project_id}`
+Partially update a launch project.
+
+Example payload:
+```json
+{
+  "launch_goal": "Get first 100 signups",
+  "tone": "confident"
+}
+```
 
 ### `GET /health`
 Health check endpoint.

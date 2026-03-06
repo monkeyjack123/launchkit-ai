@@ -73,6 +73,39 @@ def test_get_missing_project_404():
     assert response.status_code == 404
 
 
+def test_patch_project_updates_subset_of_fields_and_normalizes_tone():
+    created = client.post(
+        "/api/projects",
+        json={
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+    )
+    assert created.status_code == 201
+    project_id = created.json()["id"]
+
+    patched = client.patch(
+        f"/api/projects/{project_id}",
+        json={"launch_goal": "Get first 100 signups", "tone": "  CoNfIdEnT "},
+    )
+    assert patched.status_code == 200
+    body = patched.json()
+    assert body["launch_goal"] == "Get first 100 signups"
+    assert body["tone"] == "confident"
+    assert body["product_name"] == "LaunchKit"
+
+
+def test_patch_missing_project_404():
+    response = client.patch(
+        "/api/projects/9e6b391e-bb8c-4e61-8fd8-0fa31ea8e7a0",
+        json={"launch_goal": "Get first 100 signups"},
+    )
+    assert response.status_code == 404
+
+
 def test_list_projects_supports_limit_and_tone_filter():
     payloads = [
         {

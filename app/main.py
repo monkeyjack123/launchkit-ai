@@ -15,6 +15,7 @@ from .models import (
     LaunchProjectCreate,
     LaunchProjectList,
     LaunchProjectStats,
+    LaunchProjectUpdate,
     OutputSchemaResponse,
     SupportedTonesResponse,
     ToneGuidelinesResponse,
@@ -107,6 +108,21 @@ def get_project(project_id: UUID) -> LaunchProject:
     if not project:
         raise HTTPException(status_code=404, detail="project not found")
     project.updated_at = datetime.now(timezone.utc)
+    return project
+
+
+@app.patch("/api/projects/{project_id}", response_model=LaunchProject)
+def update_project(project_id: UUID, payload: LaunchProjectUpdate) -> LaunchProject:
+    project = _DB.get(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    changes = payload.model_dump(exclude_unset=True)
+    for key, value in changes.items():
+        setattr(project, key, value)
+
+    project.updated_at = datetime.now(timezone.utc)
+    _DB[project.id] = project
     return project
 
 

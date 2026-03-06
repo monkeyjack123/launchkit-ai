@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.models import LaunchProjectCreate
+from app.models import LaunchProjectCreate, LaunchProjectUpdate
 
 
 def test_model_validation_accepts_valid_input():
@@ -24,3 +24,8 @@ def test_model_validation_rejects_short_one_liner():
             launch_goal="Acquire users",
             tone="confident",
         )
+
+
+def test_update_model_normalizes_tone_when_provided():
+    model = LaunchProjectUpdate(tone="  PlAyFuL  ")
+    assert model.tone == "playful"
