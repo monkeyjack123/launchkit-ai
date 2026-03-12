@@ -10,6 +10,9 @@ from .generator import SUPPORTED_TONES, TONE_GUIDELINES, generate_launch_kit
 from fastapi.responses import FileResponse
 
 from .models import (
+    AnalyticsEvent,
+    AnalyticsEventCreate,
+    AnalyticsSummary,
     LaunchKitOutput,
     LaunchProject,
     LaunchProjectCreate,
@@ -17,6 +20,8 @@ from .models import (
     LaunchProjectStats,
     LaunchProjectUpdate,
     OutputSchemaResponse,
+    RegeneratedSection,
+    RegenerateSectionRequest,
     SupportedTonesResponse,
     ToneGuidelinesResponse,
 )
@@ -24,6 +29,13 @@ from .models import (
 app = FastAPI(title="LaunchKit AI MVP", version="0.1.0")
 
 _DB: dict[UUID, LaunchProject] = {}
+_EVENTS: list[AnalyticsEvent] = []
+
+
+def _record_event(event_type: str, project_id: UUID) -> AnalyticsEvent:
+    event = AnalyticsEvent(event_type=event_type, project_id=project_id)
+    _EVENTS.append(event)
+    return event
 
 
 @app.get("/health")
@@ -35,6 +47,7 @@ def health() -> dict[str, str]:
 def create_project(payload: LaunchProjectCreate) -> LaunchProject:
     project = LaunchProject(**payload.model_dump())
     _DB[project.id] = project
+    _record_event("project_created", project.id)
     return project
 
 
@@ -52,10 +65,30 @@ def list_projects(
 
 @app.post("/api/generate-launch-kit", response_model=LaunchKitOutput)
 def generate_launch_kit_output(payload: LaunchProjectCreate) -> LaunchKitOutput:
+    temp_project = LaunchProject(**payload.model_dump())
+    _record_event("generation_started", temp_project.id)
     try:
-        return generate_launch_kit(payload)
+        output = generate_launch_kit(payload)
+        _record_event("generation_completed", temp_project.id)
+        return output
     except ValueError as exc:
+        _record_event("generation_failed", temp_project.id)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/projects/{project_id}/regenerate", response_model=RegeneratedSection)
+def regenerate_project_section(project_id: UUID, payload: RegenerateSectionRequest) -> RegeneratedSection:
+    project = _DB.get(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    source = LaunchProjectCreate(**project.model_dump(exclude={"id", "created_at", "updated_at"}))
+    generated = generate_launch_kit(source)
+    _record_event("section_regenerated", project.id)
+
+    content = getattr(generated, payload.section)
+    project.updated_at = datetime.now(timezone.utc)
+    return RegeneratedSection(section=payload.section, content=content)
 
 
 @app.get("/api/meta/tones", response_model=SupportedTonesResponse)
@@ -102,6 +135,25 @@ def project_stats() -> LaunchProjectStats:
     )
 
 
+@app.post("/api/analytics/events", response_model=AnalyticsEvent, status_code=201)
+def create_analytics_event(payload: AnalyticsEventCreate) -> AnalyticsEvent:
+    return _record_event(payload.event_type, payload.project_id)
+
+
+@app.get("/api/analytics/summary", response_model=AnalyticsSummary)
+def analytics_summary() -> AnalyticsSummary:
+    by_type: dict[str, int] = {}
+    for event in _EVENTS:
+        by_type[event.event_type] = by_type.get(event.event_type, 0) + 1
+
+    latest_event_at = _EVENTS[-1].created_at if _EVENTS else None
+    return AnalyticsSummary(
+        total_events=len(_EVENTS),
+        by_type=by_type,
+        latest_event_at=latest_event_at,
+    )
+
+
 @app.get("/api/projects/{project_id}", response_model=LaunchProject)
 def get_project(project_id: UUID) -> LaunchProject:
     project = _DB.get(project_id)
@@ -123,6 +175,7 @@ def update_project(project_id: UUID, payload: LaunchProjectUpdate) -> LaunchProj
 
     project.updated_at = datetime.now(timezone.utc)
     _DB[project.id] = project
+    _record_event("project_updated", project.id)
     return project
 
 

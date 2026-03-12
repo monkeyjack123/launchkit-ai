@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import _DB, app
+from app.main import _DB, _EVENTS, app
 
 
 client = TestClient(app)
@@ -10,8 +10,10 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clear_db():
     _DB.clear()
+    _EVENTS.clear()
     yield
     _DB.clear()
+    _EVENTS.clear()
 
 
 def test_health():
@@ -286,3 +288,96 @@ def test_output_schema_endpoint_returns_channel_contract_and_constraints():
     ]
     assert body["constraints"]["product_hunt.tagline"] == "Max 60 characters"
     assert body["constraints"]["email_sequence"] == "Exactly 3 emails"
+
+
+def test_regenerate_section_returns_requested_content_and_logs_event():
+    created = client.post(
+        "/api/projects",
+        json={
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+    )
+    project_id = created.json()["id"]
+
+    regenerated = client.post(
+        f"/api/projects/{project_id}/regenerate",
+        json={"section": "x_thread"},
+    )
+    assert regenerated.status_code == 200
+    body = regenerated.json()
+    assert body["section"] == "x_thread"
+    assert "tweets" in body["content"]
+
+    summary = client.get("/api/analytics/summary")
+    assert summary.status_code == 200
+    analytics = summary.json()
+    assert analytics["by_type"]["section_regenerated"] == 1
+
+
+def test_project_lifecycle_events_are_recorded_automatically():
+    created = client.post(
+        "/api/projects",
+        json={
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+    )
+    project_id = created.json()["id"]
+
+    generated = client.post(
+        "/api/generate-launch-kit",
+        json={
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+    )
+    assert generated.status_code == 200
+
+    patched = client.patch(
+        f"/api/projects/{project_id}",
+        json={"launch_goal": "Get first 100 signups"},
+    )
+    assert patched.status_code == 200
+
+    summary = client.get("/api/analytics/summary")
+    assert summary.status_code == 200
+    body = summary.json()
+    assert body["total_events"] == 4
+    assert body["by_type"]["project_created"] == 1
+    assert body["by_type"]["generation_started"] == 1
+    assert body["by_type"]["generation_completed"] == 1
+    assert body["by_type"]["project_updated"] == 1
+    assert body["latest_event_at"] is not None
+
+
+def test_custom_analytics_event_endpoint_records_feedback_event():
+    created = client.post(
+        "/api/projects",
+        json={
+            "product_name": "LaunchKit",
+            "one_liner": "Generate launch assets from one clear brief.",
+            "target_audience": "Indie hackers",
+            "launch_goal": "Get first 50 signups",
+            "tone": "clear",
+        },
+    )
+    project_id = created.json()["id"]
+
+    response = client.post(
+        "/api/analytics/events",
+        json={"event_type": "feedback_submitted", "project_id": project_id},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["event_type"] == "feedback_submitted"
+    assert body["project_id"] == project_id

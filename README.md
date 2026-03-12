@@ -57,6 +57,19 @@ This increment adds partial-update support for saved launch projects:
 - Normalizes `tone` during updates (trim + lowercase) for consistent filtering/analytics
 - Added model + API tests for update success and 404 handling
 
+## MVP increment (Issue 9)
+This increment adds baseline analytics instrumentation for KPI tracking:
+- Auto-records lifecycle events (`project_created`, `generation_started`, `generation_completed`, `generation_failed`, `project_updated`)
+- Added manual event ingestion endpoint for UX signal capture (`feedback_submitted`)
+- Added `GET /api/analytics/summary` for quick event-volume and event-type rollups
+- Added API tests covering lifecycle auto-logging and manual feedback event capture
+
+## MVP increment (Issue 9 follow-up)
+This increment closes the regenerate analytics gap:
+- Added `POST /api/projects/{project_id}/regenerate` for per-section regeneration (`landing_page`, `product_hunt`, `x_thread`, `email_sequence`)
+- Regeneration now records `section_regenerated` analytics events
+- Added API test coverage for regenerate output contract + analytics tracking
+
 ## Quickstart
 
 ```bash
@@ -171,6 +184,53 @@ Response:
     "x_thread.tweets": "Exactly 4 tweets",
     "email_sequence": "Exactly 3 emails"
   }
+}
+```
+
+### `POST /api/projects/{project_id}/regenerate`
+Regenerate one output section for a saved project and track the action in analytics.
+
+Example payload:
+```json
+{
+  "section": "x_thread"
+}
+```
+
+### `POST /api/analytics/events`
+Record a product analytics event.
+
+Example payload:
+```json
+{
+  "event_type": "feedback_submitted",
+  "project_id": "f7e0f915-4d5f-4f6d-a99d-737f95ad6a1a"
+}
+```
+
+Supported `event_type` values:
+- `project_created`
+- `generation_started`
+- `generation_completed`
+- `generation_failed`
+- `project_updated`
+- `feedback_submitted`
+- `section_regenerated`
+
+### `GET /api/analytics/summary`
+Return aggregate event counters for quick KPI rollups.
+
+Response:
+```json
+{
+  "total_events": 12,
+  "by_type": {
+    "project_created": 4,
+    "generation_started": 3,
+    "generation_completed": 3,
+    "feedback_submitted": 2
+  },
+  "latest_event_at": "2026-03-11T05:45:00Z"
 }
 ```
 

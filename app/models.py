@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Any
+from typing import Any, Literal
+
+
+SectionName = Literal["landing_page", "product_hunt", "x_thread", "email_sequence"]
 
 
 class LaunchProjectCreate(BaseModel):
@@ -73,3 +76,36 @@ class LaunchKitOutput(BaseModel):
     product_hunt: dict[str, Any]
     x_thread: dict[str, Any]
     email_sequence: list[dict[str, str]]
+
+
+class RegenerateSectionRequest(BaseModel):
+    section: SectionName
+
+
+class RegeneratedSection(BaseModel):
+    section: SectionName
+    content: dict[str, Any] | list[dict[str, str]]
+
+
+class AnalyticsEventCreate(BaseModel):
+    event_type: Literal[
+        "project_created",
+        "generation_started",
+        "generation_completed",
+        "generation_failed",
+        "project_updated",
+        "feedback_submitted",
+        "section_regenerated",
+    ]
+    project_id: UUID
+
+
+class AnalyticsEvent(AnalyticsEventCreate):
+    id: UUID = Field(default_factory=uuid4)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class AnalyticsSummary(BaseModel):
+    total_events: int
+    by_type: dict[str, int]
+    latest_event_at: datetime | None = None
